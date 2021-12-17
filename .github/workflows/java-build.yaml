@@ -1,0 +1,40 @@
+---
+name: Java Build CI
+
+on:
+  push:
+    paths:
+      - "**.java"
+      - "pom.xml"
+      - ".github/workflows/java-build.yaml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      fail-fast: true
+      matrix:
+        # 8 is the lowest java version for github runners
+        version: ['8', '17']
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          java-version: ${{ matrix.version }}
+          distribution: 'temurin'
+          architecture: x64
+      - name: Download Maven
+        # this step is only needed for running locally through `act`
+        if: ${{ env.ACT }}
+        run: |
+          curl -sL https://www-eu.apache.org/dist/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.zip -o maven.zip
+          apt-get -y install unzip
+          unzip -d /usr/share maven.zip
+          rm maven.zip
+          ln -s /usr/share/apache-maven-3.6.3/bin/mvn /usr/bin/mvn
+          echo "M2_HOME=/usr/share/apache-maven-3.6.3" | tee -a /etc/environment
+      - name: Build with Maven
+        run: mvn -e --batch-mode --update-snapshots verify
