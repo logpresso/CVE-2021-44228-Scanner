@@ -1,0 +1,74 @@
+name: GraalVM native-image build
+
+on:
+  push:
+    paths:
+      - "src/**"
+      - "pom.xml"
+      - ".github/workflows/graalVM.yml"
+
+jobs:
+  buildOnLinux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ayltai/setup-graalvm@v1
+        with:
+          java-version: 11
+          graalvm-version: 21.3.0
+          native-image: true
+      - name: Build with Maven
+        run: mvn -B clean package -Pnative --file pom.xml
+      - name: Copy artifacts
+        run: mkdir -p staging && cp target/log4j2-scanner staging/log4j2-scanner-linux-amd64 && cp target/*.jar staging
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: package
+          path: staging/
+      - name: Clean staging
+        run: rm -fr staging
+
+  buildOnMacOS:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ayltai/setup-graalvm@v1
+        with:
+          java-version: 11
+          graalvm-version: 21.3.0
+          native-image: true
+      - name: Build with Maven
+        run: mvn -B clean package -Pnative --file pom.xml
+      - name: Copy artifacts
+        run: mkdir -p staging && cp target/log4j2-scanner staging/log4j2-scanner-mac-amd64
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: package
+          path: staging
+      - name: Clean staging
+        run: rm -fr staging
+
+  buildOnWindows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ilammy/msvc-dev-cmd@v1.5.0
+      - uses: microsoft/setup-msbuild@v1
+      - uses: ayltai/setup-graalvm@v1
+        with:
+          java-version: 11
+          graalvm-version: 21.3.0
+          native-image: true
+      - name: Build with Maven
+        run: mvn -B clean package -Pnative --file pom.xml
+        shell: powershell
+      - name: Copy artifacts
+        run: cp target/log4j2-scanner.exe log4j2-scanner-win-amd64.exe
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          if-no-files-found: warn
+          name: package
+          path: target/*.exe
