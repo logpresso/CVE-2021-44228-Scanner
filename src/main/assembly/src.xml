@@ -1,0 +1,13 @@
+<assembly>
+	<id>package</id>
+	<formats>
+		<format>jar</format>
+	</formats>
+	<includeBaseDirectory>false</includeBaseDirectory>
+	<dependencySets>
+		<dependencySet>
+			<unpack>true</unpack>
+			<outputDirectory>/</outputDirectory>
+		</dependencySet>
+	</dependencySets>
+</assembly>
